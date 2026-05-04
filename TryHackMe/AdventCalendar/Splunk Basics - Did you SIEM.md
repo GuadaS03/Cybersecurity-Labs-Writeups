@@ -1,6 +1,6 @@
 # Splunk Basics — Did you SIEM?
 > **TryHackMe · Advent of Cyber 2025 · Day 3**  
-> 🟡 Medium · SIEM · Log Analysis · Threat Detection  
+>  Medium · SIEM · Log Analysis · Threat Detection  
 ---
 
 ## Contexto del escenario
@@ -62,7 +62,7 @@ Fui a la pestaña **Visualization** para ver el gráfico de barras. Se notaba cl
 index=main sourcetype=web_traffic | timechart span=1d count | sort by count | reverse
 ```
 
-> **🚩 Flag 1 — Día con mayor tráfico: `2025-10-12`**
+>  Flag 1 — Día con mayor tráfico: `2025-10-12`**
 
 El pico era masivo comparado con el tráfico diario normal. Ese era el día del ataque principal.
 
@@ -111,7 +111,7 @@ user_agent!=*Firefox*
 | head 5
 ```
 
-> **🚩 Flag 1 — IP del atacante: `198.51.100.55`**
+>  Flag 1 — IP del atacante: `198.51.100.55`**
 
 ---
 
@@ -145,7 +145,7 @@ AND path="*..\/..\/*" OR path="*redirect*"
 
 **Resultado:** 658 intentos de path traversal buscando acceder a archivos del sistema fuera del webroot.
 
-> **🚩 Flag — Path traversal attempts: `658`**
+>  Flag — Path traversal attempts: `658`**
 
 ---
 
@@ -161,7 +161,7 @@ AND user_agent IN ("*sqlmap*", "*Havij*")
 
 **Resultado:** Payloads con `SLEEP(5)` confirmando SQL injection basada en tiempo. Los status codes 504 (Gateway Timeout) confirmaron que la inyección fue exitosa — el servidor esperó el tiempo del `SLEEP`.
 
-> **🚩 Flag — Eventos de Havij user_agent: `993`**
+>  Flag — Eventos de Havij user_agent: `993`**
 
 ---
 
@@ -222,32 +222,22 @@ AND action="ALLOWED"
 | stats sum(bytes_transferred) by src_ip
 ```
 
-> **🚩 Flag — Bytes transferidos al C2: `126167`**
+>  Flag — Bytes transferidos al C2: `126167`**
 
 ---
 
 ## Línea de tiempo del ataque (resumen)
 
-```
-2025-10-12
-│
-├── Reconocimiento
-│   └── curl/wget → /.env, /.git, /phpinfo  [404/403]
-│
-├── Enumeración  
-│   └── 658 intentos de path traversal  [400/403]
-│
-├── Explotación
-│   └── sqlmap + Havij → SQL Injection con SLEEP(5)  [504 ✓]
-│
-├── Exfiltración inicial
-│   └── curl/zgrab → /logs.tar.gz, /backup.zip
-│
-├── Persistencia (RCE)
-│   └── shell.php?cmd=./bunnylock.bin  [200 ✓]  ← PUNTO CRÍTICO
-│
-└── C2 activo
-    └── 10.10.1.5 → 198.51.100.55 → 126.167 bytes exfiltrados
+```mermaid
+graph TD
+    A[2025-10-12: Inicio del Ataque] --> B(Reconocimiento: .env, .git)
+    B --> C(Enumeración: 658 Path Traversal)
+    C --> D(Explotación: SQLi con Havij)
+    D --> E(Exfiltración: backup.zip)
+    E --> F{RCE: shell.php}
+    F --> G[C2 Activo: 126KB transferidos]
+    
+    style F fill:#f96,stroke:#333,stroke-width:4px
 ```
 
 ---
@@ -297,7 +287,7 @@ Uno de los aspectos más valiosos fue **pivotar entre `web_traffic` y `firewall_
 
 ## Reflexión personal
 
-Lo que más me impactó de este room fue entender que el **tiempo importa más que la herramienta**. El atacante usó curl, sqlmap, y un webshell básico — nada sofisticado. Lo que lo hizo peligroso fue la velocidad y metodología con la que encadenó las fases.
+Lo que más me impactó de este room fue entender que el **tiempo importa más que la herramienta**. El atacante usó curl, sqlmap, y un webshell básico nada sofisticado. Lo que lo hizo peligroso fue la velocidad y metodología con la que encadenó las fases.
 
 También aprendí que filtrar primero el ruido (excluir Mozilla/Chrome/Safari) es más efectivo que buscar lo malicioso directamente. En un entorno real con millones de eventos, esa diferencia de enfoque determina si encontrás el ataque o lo perdés en el ruido.
 
@@ -307,12 +297,7 @@ También aprendí que filtrar primero el ruido (excluir Mozilla/Chrome/Safari) e
 
 - [TryHackMe — Advent of Cyber 2025](https://tryhackme.com/christmas)
 - [Splunk SPL Reference](https://docs.splunk.com/Documentation/Splunk/latest/SearchReference)
-- [MITRE ATT&CK — T1190 Exploit Public-Facing Application](https://attack.mitre.org/techniques/T1190/)
-- [MITRE ATT&CK — T1059 Command and Scripting Interpreter](https://attack.mitre.org/techniques/T1059/)
-- [MITRE ATT&CK — T1041 Exfiltration Over C2 Channel](https://attack.mitre.org/techniques/T1041/)
-- [Windows Event ID Reference](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/)
-
 ---
 
-*Write-up por [Guadalupe Savall](https://linkedin.com/in/guadalupesavall) · San Juan, Argentina*  
+*Write-up por [Guadalupe Savall](https://linkedin.com/in/guadalupesavall)*  
 *Este write-up es con fines educativos. Todos los entornos son simulados dentro de TryHackMe.*
